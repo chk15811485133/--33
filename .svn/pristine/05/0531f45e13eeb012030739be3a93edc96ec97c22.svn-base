@@ -1,0 +1,19 @@
+//
+//  LHCChatTextField.h
+//  Group-Demo-01
+//
+//  Created by qianfeng on 16/4/11.
+//  Copyright © 2016年 qianfeng. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+typedef void(^SendAction)(NSString *);
+
+@interface LHCChatTextField : UIView
+
+/**发送按钮点击事件*/
+@property (nonatomic,strong) SendAction sendAction;
+
+
+@end

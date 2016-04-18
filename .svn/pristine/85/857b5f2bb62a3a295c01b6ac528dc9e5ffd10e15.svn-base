@@ -1,0 +1,175 @@
+//
+//  LHCSettingViewController.m
+//  Group-Demo-01
+//
+//  Created by qianfeng on 16/4/5.
+//  Copyright © 2016年 qianfeng. All rights reserved.
+//
+
+#import "LHCSettingViewController.h"
+#import "LHCLoginViewController.h"
+#import "CSLClearCache.h"
+#import "AppDelegate.h"
+@interface LHCSettingViewController () <UITableViewDelegate,UITableViewDataSource>
+
+@property (nonatomic,strong) UITableView *tableVeiw;
+@property (nonatomic,strong) NSArray *datasource;
+@property (nonatomic,strong) NSArray *imageData;
+@property (nonatomic,strong) UIImageView *bgimage;
+@property (nonatomic,strong) UILabel *text;
+
+@end
+
+@implementation LHCSettingViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.title = @"设置";
+    
+    // Do any additional setup after loading the view.
+    self.view.backgroundColor = UIColorWhite(0.9);
+    self.bgimage.userInteractionEnabled = YES;
+    self.text.userInteractionEnabled = YES;
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAction)];
+    [self.bgimage addGestureRecognizer:tap];
+    UITapGestureRecognizer *textTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAction)];
+    [self.text addGestureRecognizer:textTap];
+    [self tableVeiw];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    self.tabBarController.tabBar.hidden = YES;
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    self.tabBarController.tabBar.hidden = NO;
+}
+
+#pragma mark 懒加载
+- (UITableView *)tableVeiw {
+    if (_tableVeiw == nil) {
+        _tableVeiw = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
+        _tableVeiw.delegate = self;
+        _tableVeiw.dataSource = self;
+        
+        [self.view addSubview:_tableVeiw];
+    }
+    return _tableVeiw;
+}
+
+- (NSArray *)datasource {
+    return @[@"夜间模式",@"关于梨好脆",@"清除缓存",@"退出登录"];
+}
+
+- (NSArray *)imageData {
+    return @[@"four_yejian.png",@"four_guanyu.png",@"four_qingchu.png",@"four_tuichu"];
+}
+
+- (UIImageView *)bgimage {
+    if (_bgimage == nil) {
+        _bgimage = [[UIImageView alloc] initWithFrame:CGRectMake(0, 20, SCREEN_WIDTH, SCREEN_WIDTH/3*2.2)];
+        _bgimage.image = [UIImage imageNamed:@"bg_guanyu.png"];
+    }
+    return _bgimage;
+}
+
+- (UILabel *)text {
+    if (_text == nil) {
+        _text = [[UILabel alloc] initWithFrame:CGRectMake(self.bgimage.x+10, self.bgimage.maxY+10, SCREEN_WIDTH-20, 100)];
+        _text.text = @"汇聚了数百万的摄影、胶片玩家，绘画及动漫爱好者，并不断衍生出更多的兴趣圈子，无论是设计、艺术、科技、时尚、旅行、读书、电影评论都有精彩的人与内容不断产出。";
+        _text.numberOfLines = 0;
+    }
+    return _text;
+}
+
+//手势
+- (void)tapAction {
+    CATransition *transiction = [CATransition animation];
+    transiction.type = @"cube";
+    transiction.subtype = @"fromBottom";
+    [self.navigationController.view.layer addAnimation:transiction forKey:nil];
+    [self.view addSubview:self.tableVeiw];
+    [self.bgimage removeFromSuperview];
+    [self.text removeFromSuperview];
+    self.navigationController.navigationBarHidden = NO;
+}
+
+#pragma mark 协议方法
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return self.datasource.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"cell"];
+    }
+    cell.imageView.image = [UIImage imageNamed:self.imageData[indexPath.row]];
+    cell.textLabel.text = self.datasource[indexPath.row];
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    switch (indexPath.row) {
+        case 0:
+        {
+            AppDelegate *dele = [UIApplication sharedApplication].delegate;
+            if (dele.window.alpha != 1) {
+                dele.window.alpha = 1;
+            } else {
+                dele.window.alpha = 0.7;
+            }
+        }
+            break;
+        case 1:
+        {
+            CATransition *transiction = [CATransition animation];
+            self.navigationController.navigationBarHidden = YES;
+            transiction.type = @"cube";
+            transiction.subtype = @"fromTop";
+            [self.navigationController.view.layer addAnimation:transiction forKey:nil];
+            [self.view addSubview:self.bgimage];
+            [self.view addSubview:self.text];
+            [self.tableVeiw removeFromSuperview];
+        }
+            break;
+        case 2:
+        {
+            CSLClearCache *cache = [[CSLClearCache alloc] init];
+            NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+            NSString *path = [paths lastObject];
+            
+            float folderSize = [cache folderSizeAtPath:path];
+            
+            NSString *fileSize = [NSString stringWithFormat:@"当前缓存数据:%.2fM",folderSize];
+            [Auxiliary alertWithTitle:@"清除缓存" message:fileSize button:2 done:^{
+                [cache clearCache];
+            }];
+        }
+            break;
+        default:
+        {
+            HaoYue *haoyue = [HaoYue sharedUser];
+            haoyue.username = nil;
+            haoyue.username = nil;
+            NSUserDefaults *people = [NSUserDefaults standardUserDefaults];
+            [people removeObjectForKey:@"username"];
+            [people removeObjectForKey:@"password"];
+            
+            [[EaseMob sharedInstance].chatManager asyncLogoffWithUnbindDeviceToken:NO completion:^(NSDictionary *info, EMError *error) {
+                if (!error && info) {
+                    NSLog(@"退出成功");
+                }
+            } onQueue:nil];
+            
+            LHCLoginViewController *login = [[LHCLoginViewController alloc] init];
+            [self presentViewController:login animated:YES completion:nil];
+        }
+            break;
+    }
+}
+
+
+@end

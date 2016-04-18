@@ -1,0 +1,15 @@
+//
+//  LHCChatTableViewCell.m
+//  Group-Demo-01
+//
+//  Created by qianfeng on 16/4/11.
+//  Copyright © 2016年 qianfeng. All rights reserved.
+//
+
+#import "LHCChatTableViewCell.h"
+
+@implementation LHCChatTableViewCell
+
+
+
+@end

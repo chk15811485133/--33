@@ -1,0 +1,100 @@
+//
+//  LHCChatTableViewCell.m
+//  Group-Demo-01
+//
+//  Created by qianfeng on 16/4/11.
+//  Copyright © 2016年 qianfeng. All rights reserved.
+//
+
+#import "LHCChatTableViewCell.h"
+
+#import "LHCMessage.h"
+
+@interface LHCChatTableViewCell ()
+
+/**消息来源*/
+@property (nonatomic,strong) UILabel *fromLabel;
+
+@property (nonatomic,strong) UIImageView *fromImage;
+
+/**目的消息*/
+@property (nonatomic,strong) UILabel *toLabel;
+
+@property (nonatomic,strong) UIImageView *toImage;
+
+@end
+
+@implementation LHCChatTableViewCell
+
+- (void)setMessagess:(LHCMessage *)messagess{
+    
+    NSLog(@"%@",messagess);
+    
+    if ([messagess.from isEqualToString:self.friendID]) {
+        self.fromLabel.text = messagess.messages;
+        [self fromImage];
+    }
+    else {
+        self.toLabel.text = messagess.messages;
+        
+        self.toLabel.height = [messagess.messages boundingRectWithSize:CGSizeMake(SCREEN_WIDTH-120, FLT_MAX) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:FONT(18)} context:nil].size.height;
+        
+        [self toImage];
+    }
+    
+}
+
+#pragma mark ------------懒加载-----------
+- (UIImageView *)fromImage {
+    if (_fromImage== nil) {
+        _fromImage = [[UIImageView alloc] initWithFrame:CGRectMake(10, 0, 50, 50)];
+        
+        _fromImage.image = [UIImage imageNamed:@"selfs.jpg"];
+        
+        [self.contentView addSubview:_fromImage];
+    }
+    return _fromImage;
+}
+
+- (UILabel *)fromLabel {
+    if (_fromLabel == nil) {
+        _fromLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.fromImage.maxX, 0, SCREEN_WIDTH-20-2*self.fromImage.width, 0)];
+        
+        [self.contentView addSubview:_fromLabel];
+    }
+    return _fromLabel;
+}
+
+- (UIImageView *)toImage {
+    if (_toImage == nil) {
+        _toImage = [[UIImageView alloc] initWithFrame:CGRectMake(SCREEN_WIDTH-60, 0, 50, 50)];
+        
+        _toImage.image = [UIImage imageNamed:@"selfs"];
+        
+        [self.contentView addSubview:_toImage];
+    }
+    return _toImage;
+}
+
+- (UILabel *)toLabel {
+    if (_toLabel == nil) {
+        _toLabel = [[UILabel alloc] init];
+        
+        _toLabel.width = SCREEN_WIDTH-120;
+        
+        _toLabel.x = 60;
+        
+        _toLabel.y = 0;
+        
+        _toLabel.numberOfLines = 0;
+        
+        _toLabel.textAlignment = NSTextAlignmentRight;
+        
+        [self.contentView addSubview:_toLabel];
+    }
+    return _toLabel;
+}
+
+
+
+@end

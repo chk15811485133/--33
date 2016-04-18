@@ -1,0 +1,52 @@
+//
+//  PrefixHeader.pch
+//  Group-Demo-01
+//
+//  Created by qianfeng on 16/4/5.
+//  Copyright © 2016年 qianfeng. All rights reserved.
+//
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+/**UMengAPP_KEY*/
+#define UMENG_APPKEY @"56ea0697e0f55a136e001a89"
+
+#import "EaseMob.h"
+
+#import "CHKConstant.h"
+
+#import "AFHTTPRequestOperationManager.h"
+#import "MJRefreshFooterView.h"
+#import "MJRefreshHeaderView.h"
+#import "MJRefreshBaseView.h"
+
+#import "UIView+frame.h"
+#import "EaseMob.h"
+
+
+#import <BmobSDK/Bmob.h>
+#import "Auxiliary.h"
+#import "HaoYue.h"
+
+#import "XBConst.h"
+#import "HUProgressView.h"
+
+//详细专题
+#define kSpecial_url @"https://chanyouji.com/api/articles/%@.json?page=1"
+
+
+//首页游记专题，更改page可获得加载更多专题
+#define kYouji2_url @"https://chanyouji.com/api/articles.json?page=%d"
+//日本概览专题
+#define kZhuanti_url @"https://chanyouji.com/api/articles.json?destination_id=%@&page=%d"
+
+
+
+/**图片颜色参数：7f9572*/
+
+
+#endif /* PrefixHeader_pch */

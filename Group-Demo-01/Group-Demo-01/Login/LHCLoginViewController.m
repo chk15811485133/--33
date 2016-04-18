@@ -1,0 +1,103 @@
+//
+//  LHCLoginViewController.m
+//  Group-Demo-01
+//
+//  Created by qianfeng on 16/4/6.
+//  Copyright © 2016年 qianfeng. All rights reserved.
+//
+
+#import "LHCLoginViewController.h"
+#import "LHCRegistViewController.h"
+#import "AppDelegate.h"
+#import "CHKTabBarController.h"
+
+@interface LHCLoginViewController () <UITextFieldDelegate>
+
+@property (weak, nonatomic) IBOutlet UITextField *username;
+
+@property (weak, nonatomic) IBOutlet UITextField *password;
+
+@end
+
+@implementation LHCLoginViewController {
+    LHCRegistViewController *regist;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.password.delegate = self;
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    if ([self.username resignFirstResponder]) {
+        [self.username resignFirstResponder];
+    }
+    if ([self.password resignFirstResponder]) {
+        [self.password resignFirstResponder];
+    }
+}
+
+
+//注册
+- (IBAction)regist:(id)sender {
+    
+    regist = [[LHCRegistViewController alloc] init];
+    [self presentViewController:regist animated:YES completion:nil];
+}
+
+//登录
+- (IBAction)loginIn:(id)sender {
+    if (self.username.text.length<=0) {
+        [self.username becomeFirstResponder];//用户名获得焦点
+        return;
+    }
+    else if (self.password.text.length<=0) {
+        [self.password becomeFirstResponder];//口令获得焦点
+        return;
+    }
+
+    [BmobUser loginInbackgroundWithAccount:self.username.text andPassword:self.password.text block:^(BmobUser *user, NSError *error) {
+        if (user) {
+            if (![[user objectForKey:@"emailVerified"] boolValue]) {
+                [Auxiliary alertWithTitle:@"登录失败" message:@"请前往邮箱激活" button:1 done:nil];
+            } else {
+                EMError *error = nil;
+                NSDictionary *loginInfo = [[EaseMob sharedInstance].chatManager loginWithUsername:self.username.text password:self.password.text error:&error];
+          
+                if (!error && loginInfo ) {
+                    NSLog(@"登陆成功");
+                    
+                    //跳转到主界面
+                    [Auxiliary alertWithTitle:@"提示" message:@"登陆成功" button:1 done:nil];
+                    HaoYue *haoyue = [HaoYue sharedUser];
+                    haoyue.username = self.username.text;
+                    haoyue.password = self.password.text;
+                    NSUserDefaults *people = [NSUserDefaults standardUserDefaults];
+                    [people setObject:haoyue.username forKey:@"username"];
+                    [people setObject:haoyue.password forKey:@"password"];
+                    
+                    /**切换根视图*/
+                    [AppDelegate updateRootViewController];
+                }
+            }
+        } else {
+            [Auxiliary alertWithTitle:@"登录失败" message:@"用户名或密码错误" button:1 done:nil];
+        }
+    }];
+    
+}
+
+
+
+
+- (void)addNewMessage {
+    
+}
+
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    [self loginIn:nil];
+    return YES;
+}
+
+@end

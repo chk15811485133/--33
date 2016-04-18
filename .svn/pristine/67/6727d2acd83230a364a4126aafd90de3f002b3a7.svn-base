@@ -1,0 +1,133 @@
+//
+//  LHCFooterSecondViewController.m
+//  Group-Demo-01
+//
+//  Created by qianfeng on 16/4/7.
+//  Copyright © 2016年 qianfeng. All rights reserved.
+//
+
+#import "LHCFooterSecondViewController.h"
+#import "LHCTwoFooterModel.h"
+#import "LHCFooterSecondTableViewCell.h"
+
+#import "UMSocial.h"
+#import "UMSocialShakeService.h"
+#import "UMSocialScreenShoter.h"
+
+/**cell复用id*/
+#define ID_CELL @"cell_id"
+
+@interface LHCFooterSecondViewController () <UITableViewDataSource,UITableViewDelegate>
+
+/**数据展示*/
+@property (nonatomic,strong) UITableView *tableView;
+
+@end
+
+@implementation LHCFooterSecondViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    self.tabBarController.tabBar.hidden = YES;
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    self.tabBarController.tabBar.hidden = NO;
+}
+
+/**重写model的set方法，对数据源进行处理*/
+- (void)setModel:(LHCTwoFooterModel *)model {
+    _model = model;
+    
+    //将需要展示的数据添加到数据源数组中
+    [self.dataSource addObjectsFromArray:model.posts];
+    
+    //数据源发生改变刷表
+    [self.tableView reloadData];
+}
+
+#pragma mark------------tableView协议相关-------------
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return self.dataSource.count;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    
+    return 1;
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    LHCFooterSecondTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:ID_CELL];
+    
+    //将需要展示的数据传入
+    cell.dataDic = self.dataSource[indexPath.section];
+    
+    //手势触发的回调
+    cell.myblock = ^(UIImage *img){
+        /**写一个弹窗  保存到手机 、分享到新浪微博*/
+        NSLog(@"6656");
+        [self createAlertController:img];
+    };
+    
+    return cell;
+}
+/**弹窗定制*/
+- (void)createAlertController:(UIImage *)img {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    
+    UIAlertAction *save = [UIAlertAction actionWithTitle:@"保存到手机" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        /**将图片缓存到图库操作*/
+        UIImageWriteToSavedPhotosAlbum(img, self, nil, nil);
+        
+    }];
+    
+    UIAlertAction *share = [UIAlertAction actionWithTitle:@"分享到微博" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        /**友盟分享到新浪微博*/
+        [[UMSocialDataService defaultDataService] postSNSWithTypes:@[UMShareToSina] content:@"分享" image:img location:nil urlResource:nil presentedController:self completion:^(UMSocialResponseEntity *response) {
+            if (response.responseCode==UMSResponseCodeSuccess) {
+                /**分享成功*/
+                [Auxiliary alertWithTitle:@"提示" message:@"分享成功" button:1 done:nil];
+            }
+        }];
+        
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleDefault handler:nil];
+    
+    [alert addAction:save];
+    [alert addAction:share];
+    [alert addAction:cancel];
+    
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+/**根据需求更改cell高*/
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    LHCFooterSecondTableViewCell *cell = (LHCFooterSecondTableViewCell *)[self tableView:tableView cellForRowAtIndexPath:indexPath];
+    return cell.cellHeight;
+}
+
+
+#pragma mark ------------懒加载------------
+- (UITableView *)tableView {
+    if (_tableView == nil) {
+        _tableView = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStyleGrouped];
+        
+        _tableView.height -= 30;
+        
+        _tableView.delegate = self;
+        _tableView.dataSource = self;
+        _tableView.bounces = NO;
+        
+        [_tableView registerClass:[LHCFooterSecondTableViewCell class] forCellReuseIdentifier:ID_CELL];
+        [self.view addSubview:_tableView];
+    }
+    //注册一个cell
+    return _tableView;
+}
+
+
+@end

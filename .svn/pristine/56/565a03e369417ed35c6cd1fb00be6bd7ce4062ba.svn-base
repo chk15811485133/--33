@@ -1,0 +1,214 @@
+//
+//  LHCRootViewController.m
+//  Group-Demo-01
+//
+//  Created by qianfeng on 16/4/5.
+//  Copyright © 2016年 qianfeng. All rights reserved.
+//
+
+#import "LHCRootViewController.h"
+#import "MBProgressHUD.h"
+
+@interface LHCRootViewController ()
+
+
+-(void) showIndicatorInView:(UIView*)parentView isDisplay:(BOOL)show;//是否显示指示器
+
+
+@end
+
+@implementation LHCRootViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.view.backgroundColor = [UIColor whiteColor];
+    
+}
+
+
+
+
+
+
+
+
+//- (void)willReceiveOfflineMessages {
+//    NSLog(@"将要接收离线消息");
+//}
+//
+//- (void)didFinishedReceiveOfflineMessages {
+//    NSLog(@"已经接到离线消息");
+//}
+//
+///**接收离线信息*/
+//- (void)didReceiveOfflineMessages:(NSArray *)offlineMessages {
+//    for (EMMessage *message in offlineMessages) {
+//        id <IEMMessageBody> messageBody = message.messageBodies.firstObject;
+//        switch (messageBody.messageBodyType) {
+//            case eMessageBodyType_Text://文字聊天
+//            {
+//                NSString * txt = ((EMTextMessageBody*)messageBody).text;//获得文字信息
+//                /**得到信息添加进数据源*/
+//                [self getOffLineMessages:txt];
+//                
+//            }
+//                break;
+//                
+//            default:
+//                break;
+//        }
+//    }
+//    /**更新UI*/
+//    [self updateUI];
+//}
+///**得到离线消息，缓存到数据库中*/
+//- (void)getOffLineMessages:(NSString *)message {
+//    NSLog(@"%@",message);
+//}
+///**子类实现更新UI*/
+//- (void)updateUI {
+//    
+//}
+
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    self.dataSource = nil;//销毁数据源
+}
+
+//初始化数据源
+- (NSMutableArray *)dataSource {
+    if (!_dataSource) {
+        _dataSource = [NSMutableArray array];
+    }
+    _isLoadIndicator = NO;//默认加载数据不显示加载标志
+    return _dataSource;
+}
+
+//数据请求
+-(void) request:(NSString*)method url:(NSString*)urlString para:(NSDictionary*)dict{
+    
+    if ([method isEqualToString:@"GET"]) {
+        [CSLNetRequest get:urlString complete:^(id data) {
+            [self parserData:data];
+        } fail:^(NSError *error) {
+            NSLog(@"%@",error);
+        }];
+    }
+    else{
+        [CSLNetRequest post:urlString para:dict complete:^(id data) {
+            [self parserData:data];
+        } fail:^(NSError *error) {
+            NSLog(@"%@",error.description);
+        }];
+    }
+}
+
+
+//子类是实现
+-(void) parserData:(id)data{
+    
+}
+
+-(void) showIndicatorInView:(UIView*)parentView isDisplay:(BOOL)show{
+    if (!_isLoadIndicator) {//如果加载标志为假，不显示加载标志
+        return;
+    }
+    if (show) {
+        [MBProgressHUD showHUDAddedTo:parentView animated:YES];
+    }
+    else{
+        [MBProgressHUD hideHUDForView:parentView animated:YES];
+    }
+}
+
+//查找用户
+- (void)selectOneUser:(NSString *)username {
+    BmobQuery *query = [BmobQuery queryForUser];
+    [query whereKey:@"username" equalTo:username];
+    [query findObjectsInBackgroundWithBlock:^(NSArray *array, NSError *error) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"selectUser" object:nil userInfo:@{@"arr":array}];
+    }];
+}
+
+//添加好友
+- (void)addFriend:(NSString *)friendUsername {
+    BmobObject *friend = [BmobObject objectWithClassName:@"Friend"];
+    [friend setObject:[HaoYue sharedUser].username forKey:@"username"];
+    [friend setObject:friendUsername forKey:@"friendUsername"];
+    [friend saveInBackgroundWithResultBlock:^(BOOL isSuccessful, NSError *error) {
+        if (isSuccessful) {
+            [Auxiliary alertWithTitle:@"提示" message:@"添加成功" button:1 done:nil];
+            [self selectFriends];
+        } else {
+            [Auxiliary alertWithTitle:@"提示" message:@"添加失败，请重试" button:1 done:nil];
+        }
+    }];
+}
+
+/**查看某个好友是否已添加*/
+- (void)selectONeFriend:(NSString *)friendUsername {
+    NSMutableArray *arr = [NSMutableArray array];
+    BmobQuery *query = [BmobQuery queryWithClassName:@"Friend"];
+    [query whereKey:@"username" equalTo:[HaoYue sharedUser].username];
+    [query findObjectsInBackgroundWithBlock:^(NSArray *array, NSError *error) {
+        for (BmobObject *obj in array) {
+            NSString *str = [obj objectForKey:@"friendUsername"];
+            if ([friendUsername isEqualToString:str]) {
+                [arr addObject:str];
+            }
+        }
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"selectOneFriend" object:nil userInfo:@{@"arr":arr}];
+    }];
+}
+
+/**查找好友*/
+- (void)selectFriends {
+    NSMutableArray *arr = [NSMutableArray array];
+    BmobQuery *query = [BmobQuery queryWithClassName:@"Friend"];
+    [query whereKey:@"username" equalTo:[HaoYue sharedUser].username];
+    [query findObjectsInBackgroundWithBlock:^(NSArray *array, NSError *error) {
+        for (BmobObject *obj in array) {
+            NSString *str = [obj objectForKey:@"friendUsername"];
+            [arr addObject:str];
+        }
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"selectFriends" object:nil userInfo:@{@"arr":arr}];
+    }];
+}
+
+/**删除好友*/
+- (void)deleteFriend:(NSString *)friendUsername {
+    BmobQuery *query = [BmobQuery queryWithClassName:@"Friend"];
+    [query whereKey:@"username" equalTo:[HaoYue sharedUser].username];
+    [query findObjectsInBackgroundWithBlock:^(NSArray *array, NSError *error) {
+        for (BmobObject *obj in array) {
+            NSString *str = [obj objectForKey:@"friendUsername"];
+            if ([friendUsername isEqualToString:str]) {
+                BmobObject *object = [BmobObject objectWithoutDatatWithClassName:@"Friend" objectId:[obj objectForKey:@"objectId"]];
+                [object deleteInBackgroundWithBlock:^(BOOL isSuccessful, NSError *error) {
+                    if (isSuccessful) {
+                        [Auxiliary alertWithTitle:@"提示" message:[NSString stringWithFormat:@"%@已从好友列表移除",friendUsername] button:1 done:nil];
+                    }
+                }];
+            }
+        }
+    }];
+}
+
+/**查找关注*/
+- (void)selectUsers {
+    NSMutableArray *arr = [NSMutableArray array];
+    BmobQuery *query = [BmobQuery queryWithClassName:@"Friend"];
+    [query whereKey:@"friendUsername" equalTo:[HaoYue sharedUser].username];
+    [query findObjectsInBackgroundWithBlock:^(NSArray *array, NSError *error) {
+        for (BmobObject *obj in array) {
+            NSString *str = [obj objectForKey:@"username"];
+            [arr addObject:str];
+        }
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"selectAllUsers" object:nil userInfo:@{@"arr":arr}];
+    }];
+}
+
+@end
